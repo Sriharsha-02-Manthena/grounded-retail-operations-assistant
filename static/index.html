@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grounded Retail Operations Assistant (demo)</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; }
+input { width: 100%; padding: 0.6rem; font-size: 1rem; }
+button { padding: 0.6rem 1.2rem; font-size: 1rem; margin-top: 0.5rem; }
+pre { white-space: pre-wrap; background: #f4f4f4; padding: 1rem; }
+.cite { border-left: 3px solid #666; padding-left: 0.75rem; margin: 0.75rem 0; }
+</style>
+</head>
+<body>
+<h1>Grounded Retail Operations Assistant</h1>
+<p>Demo only. Answers come only from the sample documents in <code>data/</code>.
+If a question has no support there, the app refuses instead of inventing an answer.
+No Meta model is used unless <code>MODEL_API_KEY</code> (fallback: <code>META_MODEL_API_KEY</code>) is set; see the README.</p>
+
+<label for="q">Ask a retail operations question:</label>
+<input id="q" type="text" placeholder="e.g. How long do customers have to return an item with a receipt?">
+<button id="ask">Ask</button>
+
+<h2>Answer</h2>
+<p id="answer"></p>
+<p id="note"></p>
+<div id="citations"></div>
+<details><summary>Raw response</summary><pre id="raw"></pre></details>
+
+<script>
+document.getElementById('ask').onclick = async () => {
+  const question = document.getElementById('q').value;
+  const res = await fetch('/ask', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({question})
+  });
+  const data = await res.json();
+  document.getElementById('answer').textContent = data.answer;
+  document.getElementById('note').textContent = data.retrieval_note + ' Supported: ' + data.supported + '. Mode: ' + data.generation_mode;
+  document.getElementById('citations').innerHTML = (data.citations || []).map(c =>
+    `<div class="cite"><strong>${c.doc} — ${c.section}</strong><br>${c.excerpt}</div>`).join('');
+  document.getElementById('raw').textContent = JSON.stringify(data, null, 2);
+};
+</script>
+</body>
+</html>
